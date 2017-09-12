@@ -176,12 +176,12 @@ The Models section covers the db models using django fields.
 ### Tag<a name="tagModel"></a>
 
 * id [UUIDField] [primary key]
-* text [RegexField] [unique] [a-zA-Z0-9_]
+* text [CharField] [unique] [a-zA-Z0-9_]
 
 ### Answer<a name="answerModel"></a>
 
 * id [UUIDField] [primary key]
-* text [CharField]
+* text [CharField] [max length 30]
 * is_correct [BooleanField]
 * question [ForeignKeyField] [Question]
 
@@ -191,18 +191,17 @@ The Models section covers the db models using django fields.
 * created_on [DateTimeField]
 * created_by [ForeignKeyField] [User]
 * root_id [UUIDField]
-* version [IntegerField]
 * private [BooleanField]
-* category [ChoiceField]
-* difficulty [IntegerField]
-* text [CharField]
+* category [CharField] [choices]
+* difficulty [PositiveSmallIntegerField]
+* text [TextField]
 
 ### Question Set<a name="questionSetModel"></a>
 
 * id [UUIDField] [primaryKey]
 * created_on [DateTimeField]
 * created_by [ForeignKeyField] [User]
-* title [CharField]
+* title [CharField] [max length 60]
 * description [TextField]
 
 ### Room<a name="roomModel"></a>
@@ -210,23 +209,23 @@ The Models section covers the db models using django fields.
 * id [UUIDField] [primary]
 * created_on [DateTimeField]
 * host [ForeignKeyField] [User]
-* title [CharField]
-* max_slots [IntegerField] [min 1] [max 16]
+* title [CharField] [max length 60]
+* max_slots [PositiveSmallIntegerField] [min 1] [max 16]
 
 ### Quiz<a name="quizModel"></a>
 
 * id [UUIDField] [primary]
 * active [BooleanField]
-* format [ChoiceField]
+* format [CharField] [choices]
 * question_set [ForeignKey] [QuestionSet]
-* categories [ChoiceField] [multiple]
+* categories [CharField] [choices] [multiple]
 
 #### Questions<a name="quizQuestionRelatedModel"></a>
 
 * id [UUIDField] [primary]
 * quiz [ForeignKeyField] [Quiz]
 * question [ForeignKeyField] [Question]
-* order [IntegerField]
+* order [PositiveSmallIntegerField]
 
 #### Teams<a name="quizTeamRelatedModel"></a>
 
