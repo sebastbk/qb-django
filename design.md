@@ -1,12 +1,16 @@
 # Design Document
 
-This design document will cover views, models, and api calls for the quiz app.
+This design document will cover views, models, and api calls for the quiz bowl web application.
 
 ## Description
 
-Users can create questions with answers, question sets that compose of questions, from the lobby players can create and join rooms, re join an in progress quiz, or let match making setup a game for them.
+The original design has been scoped down to a single quiz format, the quiz bowl. This is a popular format in schools and universities.
 
-Each room has a host who has control over the room and quiz settings. Allowing for the host to set the number of players, teams, and well as the quiz format and questions. Format rules can be adjusted and the questions can be chosen by category or question set.
+In the quiz bowl format a reader will read out the question until a contestant thinks they know the answer. Contestants must buzz in before the other contestants to answer the question, at which point the reader will stop reading the question. If the contestant gets the answer correct they will get a point; if the contestant gets the question incorrect then the other contestants have an opportunity to answer the question.
+
+Users may be given permission to create their own questions and a form (separate from the admin page) will be included to support this. Question moderation is left to the admins.
+
+Users have the option to join matchmaking via a quick join method which will automatically create a game among several players or joining/creating a game room. Each room has a host who has control over the room and quiz settings. The host can set the number of players, teams, and question categories. They also have control over starting the quiz.
 
 ## Contents
 
@@ -16,7 +20,6 @@ Each room has a host who has control over the room and quiz settings. Allowing f
 * [Sign Up](#signUp)
 * [Login](#login)
 * [Create Question](#createQuestion)
-* [Create Question Set](#createQuestionSet)
 * [Lobby](#lobby)
   * [Rejoin Quiz](#rejoinGame)
   * [Quick Play](#quickPlay)
@@ -26,8 +29,10 @@ Each room has a host who has control over the room and quiz settings. Allowing f
 
 [Models](#models)
 
+* [Difficulty](#difficultyModel)
+* [Category](#categoryModel)
 * [Question](#questionModel)
-* [Question Set](#questionSetModel)
+* [Answer](#answerModel)
 * [Room](#roomModel)
 * [Quiz](#quizModel)
   * [Questions](#quizQuestionRelatedModel)
@@ -36,7 +41,7 @@ Each room has a host who has control over the room and quiz settings. Allowing f
 
 [APIs](#apis)
 
-* []()
+Coming soon!
 
 [Contributors](#contributors)
 
@@ -64,41 +69,17 @@ The landing page will prodive updates notifications as well as a ling to create 
 
 ### Create Question<a name="createQuestion"></a>
 
-All questions are text strings (the aim is to have other formats in the future) and have one or more correct answers, incorrect answers can also be provided to support specific formats such as multiple-choice. Tags can be added to the question to help other users find the types of questions they are looking for.
+All questions are text strings (the aim is to have other formats in the future) and have one or more correct answers. Tags can be added to the question to help other users find the types of questions they are looking for.
 
-Questions may be marked as private for use only by the creator.
+Questions may be marked as private, for use only by the creator.
 
 > Note: Editing a question creates a new version of a question. Only the latest version of a question will show up when searching for questions.
 
 * form
-  * **private** [false] - whether the question is private
+  * **difficulty** [required] - question difficulty
   * **category** [required] - question category
-  * **difficulty** [1] - question difficulty
-  * **tags** [parsable string [tag1,tag2,...], a-zA-Z0-9_] - keywords for lookup
   * **text** [required] - text that represents the question
-  * **answers** [must have at least 1 required answer] - inline formset
-    * **text** [required] - text that represents the answer
-    * **correct** [true] - true if correct else false (must be at least 1 correct)
-
-### Create Question Set<a name="createQuestionSet"></a>
-
-Users may create question sets using any number of public questions along with any of their private questions. The question sets will then be used as the pool of questions for a quiz.
-
-Like questions, question sets can also be made private.
-
-> Note: Similar to questions, when editing the question pool, you will create a new version of the question set. Additionally only the latset version may be edited.
-
-* form
-  * **private** [false] - whether the question set is private
-  * **name** [required] - the name of the quiz
-  * **description** [required] - a short description of the types of questions in the set
-  * **tags** [parsable string [tag1,tag2,...], a-zA-Z0-9_] - keywords for lookup
-  * **questions** - list of questions
-    * search - search for questions
-      * **private** - only show private questions
-      * **category** - the category of questions
-      * **format** - questions that can support a given format
-      * **keywords** - keywords
+  * **answers** [required] - a form set for answers. See [Answer Model](#answerModel).
 
 ### Lobby<a name="lobby"></a>
 
@@ -173,48 +154,54 @@ This host will also need to set up the game rules such as format, whether to use
 
 The Models section covers the db models using django fields.
 
-### Tag<a name="tagModel"></a>
+### Difficulty<a name="difficultyModel"></a>
 
-* id [UUIDField] [primary key]
-* text [CharField] [unique] [a-zA-Z0-9_]
+Instead of hard coding difficulties, a model is used to allow admins to determine the tiers of difficulties.
 
-### Answer<a name="answerModel"></a>
+* name [CharField]
+* rank [PositiveIntegerField]
 
-* id [UUIDField] [primary key]
-* text [CharField] [max length 30]
-* is_correct [BooleanField]
-* question [ForeignKeyField] [Question]
+### Category<a name="categoryModel"></a>
+
+The categories a question can belong to. Is used to select questions for a quiz.
+
+* name [CharField] [max_length=30] [unique]
 
 ### Question<a name="questionModel"></a>
 
-* id [UUIDField] [primary key]
-* created_on [DateTimeField]
-* created_by [ForeignKeyField] [User]
-* root_id [UUIDField]
-* private [BooleanField]
-* category [CharField] [choices]
-* difficulty [PositiveSmallIntegerField]
-* text [TextField]
+Contains meta data about a question, as well as, the question itself.
 
-### Question Set<a name="questionSetModel"></a>
-
-* id [UUIDField] [primaryKey]
 * created_on [DateTimeField]
-* created_by [ForeignKeyField] [User]
-* title [CharField] [max length 60]
-* description [TextField]
+* created_by [ForeignKey] [User]
+* category [ForeignKey] [Category]
+* difficulty [ForeignKey] [Difficulty]
+* text [TextField] - possibly use a markdown to allow for some styling
+
+### Answer<a name="answerModel"></a>
+
+A single answer to a question. If there are multiple way to refer to the answer, they can be specified in a list separated by a comma.
+
+Example a carbonated beverage might be referred to as:
+
+    Coke, Pop, Soda
+
+* question [ForeignKey] [Question]
+* wordings [CharField] - comma separated list of wordings for an answer
+* matching [CharField] [choices] [Fuzzy] [Strict] - matching method
+
+Strict and Fuzzy matching both normalize the strings for comparison, however, fuzzy matching will check how similar the two strings are and accept strings that are close. This is implemented to help with spelling errors. In the future it might make sense to simply have a word autocomplete to help users avoid mistakes.
+
+> Note: String normalization strips all punctuation, whitespace, and accents. It also converts all strings to lowercase.
 
 ### Room<a name="roomModel"></a>
 
-* id [UUIDField] [primary]
 * created_on [DateTimeField]
-* host [ForeignKeyField] [User]
+* host [ForeignKey] [User]
 * title [CharField] [max length 60]
-* max_slots [PositiveSmallIntegerField] [min 1] [max 16]
+* max_slots [PositiveSmallIntegerField] [min 1] [max 9]
 
 ### Quiz<a name="quizModel"></a>
 
-* id [UUIDField] [primary]
 * active [BooleanField]
 * format [CharField] [choices]
 * question_set [ForeignKey] [QuestionSet]
@@ -222,27 +209,26 @@ The Models section covers the db models using django fields.
 
 #### Questions<a name="quizQuestionRelatedModel"></a>
 
-* id [UUIDField] [primary]
-* quiz [ForeignKeyField] [Quiz]
-* question [ForeignKeyField] [Question]
+* quiz [ForeignKey] [Quiz]
+* question [ForeignKey] [Question]
 * order [PositiveSmallIntegerField]
 
 #### Teams<a name="quizTeamRelatedModel"></a>
 
-* id [UUIDField] [primary]
 * quiz [ForeignKey] [Quiz]
 * name [CharField]
 * score [IntegerField]
 
 #### Players<a name="quizPlayerRelatedModel"></a>
 
-* id [UUIDField] [primary]
 * quiz [ForeignKey] [Quiz]
 * team [ForeignKey] [Team]
 * user [ForeignKey] [User]
 * score [IntegerField]
 
 ## APIs<a name="apis"></a>
+
+Coming Soon!
 
 ## Contributors<a name="contributors"></a>
 
