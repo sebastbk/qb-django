@@ -60,8 +60,8 @@ class Answer(models.Model):
                                           'casing, and accents.')
 
     def get_matching_func(self):
-        """Returns a comparison function based on the matching field."""
-        return fuzzy_match if self.matching == FUZZY else strict_match
+        """Returns a comparison function based on the matching field. Defaults to fuzzy_match."""
+        return strict_match if self.matching == self.STRICT else fuzzy_match
 
     def check_answer(self, answer):
         """Compares a string to the answer for correctness."""
@@ -70,7 +70,7 @@ class Answer(models.Model):
 
     def to_list(self):
         """Returns a list of wordings."""
-        return (x.strip() for x in self.wordings.split(','))
+        return [x.strip() for x in self.wordings.split(',')]
 
     def __str__(self):
         return ' or '.join(self.to_list())

@@ -191,7 +191,7 @@ Example a carbonated beverage might be referred to as:
 
 Strict and Fuzzy matching both normalize the strings for comparison, however, fuzzy matching will check how similar the two strings are and accept strings that are close. This is implemented to help with spelling errors. In the future it might make sense to simply have a word autocomplete to help users avoid mistakes.
 
-> Note: String normalization strips all punctuation, whitespace, and accents. It also converts all strings to lowercase.
+> Note: String normalization strips all punctuation, whitespace, and accents. It also converts all characters to lowercase.
 
 ### Room<a name="roomModel"></a>
 
