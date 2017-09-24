@@ -1,5 +1,6 @@
-from django.shortcuts import render
+from django.views.generic import ListView
+from .models import Question
 
 
-def index(request):
-    return render(request, 'base.html')
+class QuestionListView(ListView):
+    model = Question

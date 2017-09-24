@@ -1,8 +1,8 @@
 from django.conf.urls import url
 
-from . import views
+from .views import QuestionListView
 
 
 urlpatterns = [
-    url(r'^$', views.index),
+    url(r'^$', QuestionListView.as_view(), name='list'),
 ]

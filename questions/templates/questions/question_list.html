@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="py-3 py-xl-5 mb-3 mb-xl-5 bg-primary text-white">
+  <div class="container">
+    <h1 class="m-0">Questions</h1>
+  </div>
+</div>
+
+<div class="container">
+  <div class="list-group">
+  {% for question in question_list %}
+    <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1 text-primary">{{ question.category }}</h5>
+        <small class="text-muted">{{ question.difficulty }}</small>
+      </div>
+      <p class="mb-1">{{ question.text }}</p>
+      <small class="text-muted">{{ question.created_on }}</small>
+    </a>
+  {% endfor %}
+  </div>
+</div>
+{% endblock content %}
