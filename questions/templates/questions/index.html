@@ -8,7 +8,16 @@
 </div>
 
 <div class="container">
-  <div class="list-group">
+  <form class="mb-3">
+    <div class="input-group mb-2 mb-sm-0">
+      <input type="text" class="form-control" name="q" placeholder="Search" value="{{ form.q.value|default_if_none:"" }}">
+      <div class="input-group-btn">
+        <button class="btn btn-primary" type="submit">Go</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="list-group mb-3">
   {% for question in question_list %}
     <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
       <div class="d-flex w-100 justify-content-between">
