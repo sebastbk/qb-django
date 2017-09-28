@@ -118,7 +118,10 @@ class Answer(models.Model):
                                  help_text='The format of the answer.')
     
     def __str__(self):
-        return ' or '.join(filter(None, [self.answer, self.alt1, self.alt2]))
+        return ' or '.join(self.to_list())
 
     class Meta:
         order_with_respect_to = 'question'
+
+    def to_list(self):
+        return filter(None, [self.answer, self.alt1, self.alt2])

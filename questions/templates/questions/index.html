@@ -9,13 +9,25 @@
 
 <div class="container">
   <form class="mb-3">
-    <div class="input-group mb-2 mb-sm-0">
-      <input type="text" class="form-control" name="q" placeholder="Search e.g. pop_culture" value="{{ request.GET.q }}">
+    <div class="input-group">
+      <input type="text" class="form-control rounded-0" name="search_query" placeholder="Search e.g. pop_culture" maxlength="35" 
+             pattern=".{0}|.{3,}" title="Empty or 3 characters minimum." value="{{ request.GET.search_query }}">
       <div class="input-group-btn">
-        <button class="btn btn-primary" type="submit">Go</button>
+        <input class="btn btn-primary" type="submit" value="Go">
       </div>
     </div>
   </form>
+  <ul class="list-inline text-center">
+  {% for difficulty in difficulties %}
+    <li class="list-inline-item">
+    {% if difficulty == filter_difficulty %}
+      <a class="font-weight-bold" href="?search_query={{ search_query }}">{{ difficulty.name }}</a>
+    {% else %}
+      <a href="?filter={{ difficulty.pk }}&search_query={{ search_query }}">{{ difficulty.name }}</a>
+    {% endif %}
+    </li>
+  {% endfor %}
+  </ul>
 
   <div class="list-group mb-3">
   {% for question in question_list %}
@@ -27,6 +39,8 @@
       <p class="mb-1">{{ question.text }}</p>
       <small class="text-muted">{{ question.created_on }}</small>
     </a>
+  {% empty %}
+    <p class="text-center">No results found!</p>
   {% endfor %}
   </div>
 </div>
