@@ -1,6 +1,7 @@
+from datetime import datetime
 from django.db import models
 from django.contrib.auth import get_user_model
-from .validators import validate_comma_separated_string_list
+from django.shortcuts import reverse
 from utils.strings import fuzzy_match, strict_match
 User = get_user_model()
 
@@ -38,42 +39,86 @@ class Question(models.Model):
     def __str__(self):
         return self.text
 
+    def get_absolute_url(self):
+        return reverse('question-detail', kwargs={'pk': self.pk})
+
     class Meta:
         ordering = ['-created_on']
 
 
-class Answer(models.Model):
+class CharTypeMixin(object):
+    """Helper class for storing several stringable datatypes into a charfield."""
+    TEXT = 'str'
+    NUMBER = 'int'
+    DATE = 'date'
+    TIME = 'time'
+    TYPE_CHOICES = (
+        (TEXT, 'Text'),
+        (NUMBER, 'Number'),
+        (DATE, 'Date'),
+        (TIME, 'Time'),
+    )
+
+    EXTRACT_FUNCTIONS = {
+        TEXT: str,
+        NUMBER: int,
+        DATE: lambda x: datetime.strptime(x, '%Y-%m-%d').date(),
+        TIME: lambda x: datetime.strptime(x, '%H:%M:%S').time(),
+    }
+
+    @classmethod
+    def get_extract_func(cls, extract_type):
+        if extract_type not in cls.EXTRACT_FUNCTIONS:
+            raise ValueError('Invalid extract type: %(extract_type)s.' % {'extract_type': extract_type})
+        return cls.EXTRACT_FUNCTIONS[extract_type]
+
+    PACKING_FUNCTIONS = {
+        TEXT: str,
+        NUMBER: str,
+        DATE: lambda x: x.strftime('%Y-%m-%d'),
+        TIME: lambda x: x.strftime('%H:%M:%S'),
+    }
+
+    @classmethod
+    def get_packing_func(cls, packing_type):
+        if packing_type not in cls.PACKING_FUNCTIONS:
+            raise ValueError('Invalid extract type: %(packing_type)s.' % {'packing_type': packing_type})
+        return cls.PACKING_FUNCTIONS[packing_type]
+
+
+class MatchingMixin(object):
     FUZZY = 'FU'
     STRICT = 'ST'
     MATCHING_CHOICES = (
         (FUZZY, 'Fuzzy'),
         (STRICT, 'Strict'),
     )
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    wordings = models.CharField(max_length=255, validators=[validate_comma_separated_string_list],
-                                help_text='If the answer can be written in several ways use a comma '
-                                          'separated list of wordings.')
-    matching = models.CharField(max_length=2, choices=MATCHING_CHOICES, default=FUZZY, 
-                                help_text='The comparison method for checking if an answer is correct.\n'
-                                          '- Fuzzy matching attempts to compensate for spelling.\n'
-                                          '- Strict matching will only compensate for symbols, whitespace, '
-                                          'casing, and accents.')
+    MATCHING_FUNCTIONS = {
+        FUZZY: fuzzy_match,
+        STRICT: strict_match,
+    }
 
-    def get_matching_func(self):
-        """Returns a comparison function based on the matching field. Defaults to fuzzy_match."""
-        return strict_match if self.matching == self.STRICT else fuzzy_match
+    def get_matching_func(matching_type):
+        if matching_type not in MATCHING_FUNCTIONS:
+            raise ValueError('Invalid matching type: %(matching_type)s.' % {'matching_type': matching_type})
+        return MATCHING_FUNCTIONS[matching_type]
 
-    def check_answer(self, answer):
-        """Compares a string to the answer for correctness."""
-        matching_func = self.get_matching_func()
-        return any(matching_func(w, answer) for w in self.to_list())
 
-    def to_list(self):
-        """Returns a list of wordings."""
-        return [x.strip() for x in self.wordings.split(',')]
-
+class Answer(models.Model):
+    question = models.ForeignKey(
+        Question, 
+        on_delete=models.CASCADE,
+        related_name='answer',
+        related_query_name='answers',
+    )
+    answer = models.CharField(max_length=30)
+    alt1 = models.CharField(max_length=30, blank=True)
+    alt2 = models.CharField(max_length=30, blank=True)
+    data_type = models.CharField(max_length=4, choices=CharTypeMixin.TYPE_CHOICES, default=CharTypeMixin.TEXT, 
+                                 help_text='The format of the answer.')
+    
     def __str__(self):
-        return ' or '.join(self.to_list())
+        return ' or '.join(filter(None, [self.answer, self.alt1, self.alt2]))
 
     class Meta:
         order_with_respect_to = 'question'

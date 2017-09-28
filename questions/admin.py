@@ -8,9 +8,13 @@ class AnswerInline(admin.TabularInline):
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
+    list_display = ('category', 'difficulty', 'text', 'answers')
     inlines = [
         AnswerInline,
     ]
+
+    def answers(self, obj):
+        return ' and '.join([str(x) for x in obj.answer.all()])
 
 
 @admin.register(Difficulty, Category)

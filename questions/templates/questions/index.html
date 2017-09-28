@@ -10,7 +10,7 @@
 <div class="container">
   <form class="mb-3">
     <div class="input-group mb-2 mb-sm-0">
-      <input type="text" class="form-control" name="q" placeholder="Search" value="{{ form.q.value|default_if_none:"" }}">
+      <input type="text" class="form-control" name="q" placeholder="Search e.g. pop_culture" value="{{ request.GET.q }}">
       <div class="input-group-btn">
         <button class="btn btn-primary" type="submit">Go</button>
       </div>

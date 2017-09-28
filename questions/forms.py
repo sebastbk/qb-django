@@ -1,4 +1,12 @@
 from django import forms
+from django.utils.translation import ugettext_lazy as _
+from .models import Question
 
-class QuestionFilterForm(forms.Form):
-    q = forms.CharField(label='Search', max_length=100)
+
+class QuestionForm(forms.ModelForm):
+    class Meta:
+        model = Question
+        exclude = ['created_by', 'created_on']
+        labels = {
+            'text': _('Question')
+        }
