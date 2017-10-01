@@ -1,12 +1,7 @@
-{% extends "base.html" %}
+{% extends "questions/base.html" %}
 
 {% block content %}
-<div class="py-3 py-xl-5 mb-3 mb-xl-5 bg-primary text-white">
-  <div class="container">
-    <h1 class="m-0">Questions</h1>
-  </div>
-</div>
-
+{{ block.super }}
 <div class="container">
   <form class="mb-3">
     <div class="input-group">
@@ -28,6 +23,8 @@
     </li>
   {% endfor %}
   </ul>
+
+  <p class="text-right mb-0"><a href="{% url "questions:create" %}">New Question</a></p>
 
   <div class="list-group mb-3">
   {% for question in question_list %}

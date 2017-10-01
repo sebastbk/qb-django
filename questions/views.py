@@ -1,8 +1,13 @@
 from functools import reduce
 from django.db.models import Q
+from django.shortcuts import reverse
 from django.views.generic.list import ListView
+from django.views.generic.edit import CreateView
 from django.core.exceptions import ImproperlyConfigured
+from django.db import transaction
+from .shortcuts import get_object_or_none
 from .models import Question, Difficulty
+from .forms import QuestionForm, AnswersFormSet
 
 
 COMMON_WORDS = set(['to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'up', 'about', 'into', 'over', 'after', 'the', 'and', 'a', 'that', 'i', 'it', 'not', 'he', 'as', 'you', 'this', 'but', 'his', 'they', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their'])
@@ -28,22 +33,25 @@ class SearchView(ListView):
         return queryset
 
 
-class QuestionListView(SearchView):
+class RawQueryMixin(object):
+    """Mixin for retrieving the raw query string and returning it as a dictionary."""
+    def get_raw_query_string(self):
+        return self.request.META.get('QUERY_STRING', '')
+
+    def get_raw_query_dict(self):
+        raw_qs = self.get_raw_query_string()
+        params = filter(None, raw_qs.split('&'))  # filter empty param list
+        return {k: v for k, v in map(lambda x: x.split('='), params)}
+
+
+class QuestionListView(RawQueryMixin, SearchView):
     model = Question
     template_name = 'questions/index.html'
     search_fields = ['category__name', 'text']
 
-    def get_raw_params(self):
-        raw_qs = self.request.META.get('QUERY_STRING', '')
-        params = filter(None, raw_qs.split('&'))  # filter empty param list
-        return {k: v for k, v in map(lambda x: x.split('='), params)}
-
     def get_filter_difficulty(self):
         pk = self.request.GET.get('filter')
-        try:
-            return Difficulty.objects.get(pk=pk)
-        except Difficulty.DoesNotExist:
-            return None
+        return get_object_or_none(Difficulty, pk=pk)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -54,7 +62,37 @@ class QuestionListView(SearchView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['difficulties'] = Difficulty.objects.all()
-        context['filter_difficulty'] = self.get_filter_difficulty()
-        context['search_query'] = self.get_raw_params().get('search_query', '')
+        context.update({
+            'difficulties': Difficulty.objects.all(),
+            'filter_difficulty': self.get_filter_difficulty(),
+            'search_query': self.get_raw_query_dict().get('search_query', ''),
+        })
         return context
+
+
+class QuestionCreateView(CreateView):
+    form_class = QuestionForm
+    template_name = 'questions/create.html'
+
+    def get_formset(self):
+        args = [self.request.POST] if self.request.POST else []
+        return AnswersFormSet(*args)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['answers'] = self.get_formset()
+        return context
+
+    def form_valid(self, form):
+        answers = self.get_formset()
+        with transaction.atomic():
+            form.instance.created_by = self.request.user
+            self.object = form.save()
+        if answers.is_valid():
+            answers.instance = self.object
+            answers.save()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('questions:list')
+    
