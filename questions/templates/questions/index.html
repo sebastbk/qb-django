@@ -1,36 +1,50 @@
 {% extends "questions/base.html" %}
 
+{% block css %}
+<style>
+.rounded-0-i {
+  border-radius: 0 !important;
+}
+.link-unstyled {
+  text-decoration: none !important;
+}
+</style>
+{% endblock css %}
+
 {% block content %}
 {{ block.super }}
-<div class="container">
-  <form class="mb-3">
+<div class="container bg-white pt-3-xl px-0">
+  <form>
     <div class="input-group">
-      <input type="text" class="form-control rounded-0" name="search_query" placeholder="Search e.g. pop_culture" maxlength="35" 
+      <input type="text" class="form-control rounded-0 border-0" name="search_query" placeholder="Search e.g. pop_culture" maxlength="35" 
              pattern=".{0}|.{3,}" title="Empty or 3 characters minimum." value="{{ request.GET.search_query }}">
       <div class="input-group-btn">
-        <input class="btn btn-primary" type="submit" value="Go">
+        <button class="btn border-0 rounded-0 text-primary bg-white" type="submit">
+          <span class="oi oi-magnifying-glass" title="Search" aria-hidden="true"></span>
+        </button>
       </div>
     </div>
-  </form>
-  <ul class="list-inline text-center">
+  </form> <!-- search form -->
+
+  <ul class="list-inline mb-0 py-3 text-center bg-primary">
   {% for difficulty in difficulties %}
     <li class="list-inline-item">
     {% if difficulty == filter_difficulty %}
-      <a class="font-weight-bold" href="?search_query={{ search_query }}">{{ difficulty.name }}</a>
+      <a class="font-weight-bold text-white link-unstyled" href="?search_query={{ search_query }}">{{ difficulty.name }}</a>
     {% else %}
-      <a href="?filter={{ difficulty.pk }}&search_query={{ search_query }}">{{ difficulty.name }}</a>
+      <a class="text-white link-unstyled" href="?filter={{ difficulty.pk }}&search_query={{ search_query }}">{{ difficulty.name }}</a>
     {% endif %}
     </li>
   {% endfor %}
-  </ul>
+  </ul> <!-- filter links -->
 
-  <p class="text-right mb-0"><a href="{% url "questions:create" %}">New Question</a></p>
+  {% comment %}<p class="text-right mb-0"><a href="{% url "questions:create" %}">New Question</a></p>{% endcomment %}
 
-  <div class="list-group mb-3">
+  <ul class="list-group mb-3">
   {% for question in question_list %}
     {% with question.pk as answers_id %}
-    <a data-toggle="collapse" href="#{{ answers_id }}" aria-expanded="false" aria-controls="{{ answers_id }}"
-       class="list-group-item list-group-item-action flex-column align-items-start">
+    <li data-toggle="collapse" href="#{{ answers_id }}" aria-expanded="false" aria-controls="{{ answers_id }}"
+        class="list-group-item list-group-item-action flex-column align-items-start border-light rounded-0-i border-right-0 border-left-0">
       <div class="d-flex w-100 justify-content-between">
         <h5 class="mb-1 text-primary">{{ question.category }}</h5>
         <small class="text-muted">{{ question.difficulty }}</small>
@@ -43,16 +57,33 @@
         <h6 class="text-primary">Answer{{ question.answers.count|pluralize }}</h5>
         <ol class="list-unstyled ml-3 mb-1">
         {% for answer in question.answers.all %}
-          <li>{{ answer }}</li>
+          <li class="font-weight-bold">{{ answer }}</li>
         {% endfor %}
         </ol>
       </div>
-      <small class="text-muted">{{ question.created_on }}</small>
-    </a>
+      <div class="d-flex w-100 justify-content-between">
+        <small class="text-muted">{{ question.created_on }}</small>
+        <div class="dropdown">
+          <a data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="oi oi-ellipses text-primary" title="Search" aria-hidden="true"></span>
+          </a>
+          <div class="dropdown-menu">
+            <span class="dropdown-item">
+              <span class="oi oi-pencil" title="Search" aria-hidden="true"></span>
+              Edit
+            </span>
+            <span class="dropdown-item">
+              <span class="oi oi-plus" title="Search" aria-hidden="true"></span>
+              Add to Question Set
+            </span>
+          </div> <!-- ./dropdown-menu -->
+        </div> <!-- ./dropdown -->
+      </div> <!-- ./d-flex -->
+    </li> <!-- ./list-group-item -->
     {% endwith %}
   {% empty %}
-    <p class="text-center">No results found!</p>
+    <p class="text-center mt-3">No results found!</p>
   {% endfor %}
-  </div>
+  </ul>
 </div>
 {% endblock content %}
