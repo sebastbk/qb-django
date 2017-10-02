@@ -108,7 +108,7 @@ class Answer(models.Model):
     question = models.ForeignKey(
         Question, 
         on_delete=models.CASCADE,
-        related_name='answer',
+        related_name='answers',
         related_query_name='answers',
     )
     answer = models.CharField(max_length=30)

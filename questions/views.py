@@ -58,7 +58,7 @@ class QuestionListView(RawQueryMixin, SearchView):
         filter_difficulty = self.get_filter_difficulty()
         if filter_difficulty is not None:
             queryset = queryset.filter(difficulty=filter_difficulty)
-        return queryset
+        return queryset.select_related('difficulty', 'category').prefetch_related('answers')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

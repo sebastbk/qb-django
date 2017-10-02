@@ -33,7 +33,10 @@
         <h5 class="mb-1 text-primary">{{ question.category }}</h5>
         <small class="text-muted">{{ question.difficulty }}</small>
       </div>
-      <p class="mb-1">{{ question.text }}</p>
+      <p class="mb-1">
+        {{ question.text }}
+        <span class="badge badge-primary">{{ question.answers.count }} answer{{ question.answers.count|pluralize }}</span>
+      </p>
       <small class="text-muted">{{ question.created_on }}</small>
     </a>
   {% empty %}

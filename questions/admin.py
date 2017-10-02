@@ -14,7 +14,7 @@ class QuestionAdmin(admin.ModelAdmin):
     ]
 
     def answers(self, obj):
-        return ' and '.join([str(x) for x in obj.answer.all()])
+        return ' and '.join([str(x) for x in obj.answers.all()])
 
 
 @admin.register(Difficulty, Category)
