@@ -28,7 +28,9 @@
 
   <div class="list-group mb-3">
   {% for question in question_list %}
-    <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+    {% with question.pk as answers_id %}
+    <a data-toggle="collapse" href="#{{ answers_id }}" aria-expanded="false" aria-controls="{{ answers_id }}"
+       class="list-group-item list-group-item-action flex-column align-items-start">
       <div class="d-flex w-100 justify-content-between">
         <h5 class="mb-1 text-primary">{{ question.category }}</h5>
         <small class="text-muted">{{ question.difficulty }}</small>
@@ -37,8 +39,17 @@
         {{ question.text }}
         <span class="badge badge-primary">{{ question.answers.count }} answer{{ question.answers.count|pluralize }}</span>
       </p>
+      <div class="collapse" id="{{ answers_id }}">
+        <h6 class="text-primary">Answer{{ question.answers.count|pluralize }}</h5>
+        <ol class="list-unstyled ml-3 mb-1">
+        {% for answer in question.answers.all %}
+          <li>{{ answer }}</li>
+        {% endfor %}
+        </ol>
+      </div>
       <small class="text-muted">{{ question.created_on }}</small>
     </a>
+    {% endwith %}
   {% empty %}
     <p class="text-center">No results found!</p>
   {% endfor %}
