@@ -1,6 +1,7 @@
 {% extends "questions/base.html" %}
 
 {% block css %}
+{{ block.super }}
 <style>
 .rounded-0-i {
   border-radius: 0 !important;
@@ -8,12 +9,15 @@
 .link-unstyled {
   text-decoration: none !important;
 }
+.shadow-1 {
+  box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+}
 </style>
 {% endblock css %}
 
 {% block content %}
 {{ block.super }}
-<div class="container bg-white pt-3-xl px-0">
+<div class="container bg-white pt-3-xl px-0 shadow-1 mb-0 mb-xl-3">
   <form>
     <div class="input-group">
       <input type="text" class="form-control rounded-0 border-0" name="search_query" placeholder="Search e.g. pop_culture" maxlength="35" 
@@ -23,20 +27,28 @@
           <span class="oi oi-magnifying-glass" title="Search" aria-hidden="true"></span>
         </button>
       </div>
+      <div class="input-group-btn">
+          <button class="btn border-0 rounded-0 text-primary bg-white" type="button" 
+                  data-toggle="collapse" data-target="#filters" aria-expanded="false" aria-controls="filters">
+            <span class="oi oi-cog" title="Filter" aria-hidden="true"></span>
+          </button>
+        </div>
     </div>
   </form> <!-- search form -->
 
-  <ul class="list-inline mb-0 py-3 text-center bg-primary">
-  {% for difficulty in difficulties %}
-    <li class="list-inline-item">
-    {% if difficulty == filter_difficulty %}
-      <a class="font-weight-bold text-white link-unstyled" href="?search_query={{ search_query }}">{{ difficulty.name }}</a>
-    {% else %}
-      <a class="text-white link-unstyled" href="?filter={{ difficulty.pk }}&search_query={{ search_query }}">{{ difficulty.name }}</a>
-    {% endif %}
-    </li>
-  {% endfor %}
-  </ul> <!-- filter links -->
+  <div class="collapse" id="filters">
+    <ul class="list-inline mb-0 py-3 text-center bg-primary">
+    {% for difficulty in difficulties %}
+      <li class="list-inline-item">
+      {% if difficulty == filter_difficulty %}
+        <a class="font-weight-bold text-white link-unstyled text-uppercase" href="?search_query={{ search_query }}">{{ difficulty.name }}</a>
+      {% else %}
+        <a class="text-white link-unstyled text-uppercase" href="?filter={{ difficulty.pk }}&search_query={{ search_query }}">{{ difficulty.name }}</a>
+      {% endif %}
+      </li>
+    {% endfor %}
+    </ul>
+  </div> <!-- ./filters -->
 
   {% comment %}<p class="text-right mb-0"><a href="{% url "questions:create" %}">New Question</a></p>{% endcomment %}
 
@@ -82,7 +94,7 @@
     </li> <!-- ./list-group-item -->
     {% endwith %}
   {% empty %}
-    <p class="text-center mt-3">No results found!</p>
+    <p class="text-center pt-3 border border-left-0 border-right-0 border-bottom-0 border-light">No results found!</p>
   {% endfor %}
   </ul>
 </div>
