@@ -16,7 +16,7 @@ class QuestionForm(ModelForm):
 class AnswerForm(ModelForm):
     class Meta:
         model = Answer
-        fields = ['answer', 'alt1', 'alt2', 'data_type']
+        fields = ['text', 'alt1', 'alt2', 'type']
 
 
 AnswersFormSet = inlineformset_factory(

@@ -6,7 +6,7 @@ from django.views.generic.edit import CreateView
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from .shortcuts import get_object_or_none
-from .models import Question, Difficulty
+from .models import Question
 from .forms import QuestionForm, AnswersFormSet
 
 
@@ -50,15 +50,17 @@ class QuestionListView(RawQueryMixin, SearchView):
     search_fields = ['category__name', 'text']
 
     def get_filter_difficulty(self):
-        pk = self.request.GET.get('filter')
-        return get_object_or_none(Difficulty, pk=pk)
+        try:
+            return int(self.request.GET.get('filter'))
+        except ValueError:
+            return None
 
     def get_queryset(self):
         queryset = super().get_queryset()
         filter_difficulty = self.get_filter_difficulty()
         if filter_difficulty is not None:
             queryset = queryset.filter(difficulty=filter_difficulty)
-        return queryset.select_related('difficulty', 'category').prefetch_related('answers')
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -68,31 +70,3 @@ class QuestionListView(RawQueryMixin, SearchView):
             'search_query': self.get_raw_query_dict().get('search_query', ''),
         })
         return context
-
-
-class QuestionCreateView(CreateView):
-    form_class = QuestionForm
-    template_name = 'questions/create.html'
-
-    def get_formset(self):
-        args = [self.request.POST] if self.request.POST else []
-        return AnswersFormSet(*args)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['answers'] = self.get_formset()
-        return context
-
-    def form_valid(self, form):
-        answers = self.get_formset()
-        with transaction.atomic():
-            form.instance.created_by = self.request.user
-            self.object = form.save()
-        if answers.is_valid():
-            answers.instance = self.object
-            answers.save()
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse('questions:list')
-    

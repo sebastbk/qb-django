@@ -1,46 +1,47 @@
 from datetime import datetime
 from django.db import models
+from django.core.validators import MinLengthValidator, MinValueValidator, MaxValueValidator
 from django.contrib.auth import get_user_model
-from django.shortcuts import reverse
 from utils.strings import fuzzy_match, strict_match
 User = get_user_model()
 
 
-class Difficulty(models.Model):
-    name = models.CharField(max_length=30, unique=True)
-    rank = models.PositiveIntegerField()
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ['rank']
-        verbose_name_plural = 'Difficulties'
-
-
-class Category(models.Model):
-    name = models.CharField(max_length=30, unique=True)
+class Tag(models.Model):
+    name = models.CharField(
+        max_length=30,
+        validators=[MinLengthValidator(3)],
+        unique=True
+    )
 
     def __str__(self):
         return self.name
 
     class Meta:
         ordering = ['name']
-        verbose_name_plural = 'Categories'
 
 
 class Question(models.Model):
-    created_by = models.ForeignKey(User)
+    created_by = models.ForeignKey(
+        User,
+        editable=False
+    )
     created_on = models.DateTimeField(auto_now_add=True)
-    category = models.ForeignKey(Category)
-    difficulty = models.ForeignKey(Difficulty)
     text = models.TextField(max_length=255)
+    difficulty = models.PositiveSmallIntegerField(
+        default=1,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5),
+        ]
+    )
+    tags = models.ManyToManyField(
+        Tag, 
+        related_name='questions',
+        related_query_name="question",
+    )
 
     def __str__(self):
         return self.text
-
-    def get_absolute_url(self):
-        return reverse('question-detail', kwargs={'pk': self.pk})
 
     class Meta:
         ordering = ['-created_on']
@@ -109,13 +110,20 @@ class Answer(models.Model):
         Question, 
         on_delete=models.CASCADE,
         related_name='answers',
-        related_query_name='answers',
+        related_query_name='answer',
     )
-    answer = models.CharField(max_length=30)
+    text = models.CharField(max_length=30)
     alt1 = models.CharField(max_length=30, blank=True)
     alt2 = models.CharField(max_length=30, blank=True)
-    data_type = models.CharField(max_length=4, choices=CharTypeMixin.TYPE_CHOICES, default=CharTypeMixin.TEXT, 
-                                 help_text='The format of the answer.')
+    type = models.CharField(
+        max_length=4,
+        choices=CharTypeMixin.TYPE_CHOICES,
+        default=CharTypeMixin.TEXT, 
+        help_text='The format of the answer.'
+    )
+
+    def to_list(self):
+        return filter(None, [self.text, self.alt1, self.alt2])
     
     def __str__(self):
         return ' or '.join(self.to_list())
@@ -123,5 +131,64 @@ class Answer(models.Model):
     class Meta:
         order_with_respect_to = 'question'
 
-    def to_list(self):
-        return filter(None, [self.answer, self.alt1, self.alt2])
+
+class Set(models.Model):
+    created_by = models.ForeignKey(
+        User,
+        editable=False
+    )
+    created_on = models.DateTimeField(auto_now_add=True)
+    title = models.CharField(
+        max_length=30, 
+        validators=[MinLengthValidator(3)],
+        unique=True
+    )
+    questions = models.ManyToManyField(
+        Question,
+        related_name='sets',
+        related_query_name='set'
+    )
+
+
+class RatingBase(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        editable=False
+    )
+    value = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5),
+        ]
+    )
+
+    def __str__(self):
+        return str(self.value)
+
+    class Meta:
+        abstract = True
+
+
+class QuestionRating(RatingBase):
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        related_name='ratings',
+        related_query_name='rating'
+    )
+
+    class Meta:
+        unique_together = ('question', 'user')
+
+
+class SetRating(RatingBase):
+    set = models.ForeignKey(
+        Set,
+        on_delete=models.CASCADE,
+        related_name='ratings',
+        related_query_name='rating'
+    )
+
+    class Meta:
+        unique_together = ('set', 'user')
