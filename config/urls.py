@@ -17,5 +17,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 urlpatterns = [
-    url(r'^questions/', include('questions.urls', namespace='questions')),
+    url(r'^api/', include ([
+        url(r'^questions/', include('questions.urls')),
+    ])),
 ]

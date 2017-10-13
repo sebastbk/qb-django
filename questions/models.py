@@ -13,11 +13,11 @@ class Tag(models.Model):
         unique=True
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         ordering = ['name']
+
+    def __str__(self):
+        return self.name
 
 
 class Question(models.Model):
@@ -40,11 +40,11 @@ class Question(models.Model):
         related_query_name="question",
     )
 
-    def __str__(self):
-        return self.text
-
     class Meta:
         ordering = ['-created_on']
+
+    def __str__(self):
+        return self.text
 
 
 class CharTypeMixin(object):
@@ -105,6 +105,7 @@ class MatchingMixin(object):
         return MATCHING_FUNCTIONS[matching_type]
 
 
+
 class Answer(models.Model):
     question = models.ForeignKey(
         Question, 
@@ -122,14 +123,14 @@ class Answer(models.Model):
         help_text='The format of the answer.'
     )
 
-    def to_list(self):
-        return filter(None, [self.text, self.alt1, self.alt2])
-    
-    def __str__(self):
-        return ' or '.join(self.to_list())
-
     class Meta:
         order_with_respect_to = 'question'
+    
+    def __str__(self):
+        return ' or '.join(self.list())
+
+    def list(self):
+        return filter(None, [self.text, self.alt1, self.alt2])
 
 
 class Set(models.Model):
@@ -163,11 +164,11 @@ class RatingBase(models.Model):
         ]
     )
 
-    def __str__(self):
-        return str(self.value)
-
     class Meta:
         abstract = True
+
+    def __str__(self):
+        return str(self.value)
 
 
 class QuestionRating(RatingBase):
