@@ -6,6 +6,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.contrib.auth import get_user_model
 from rest_framework import generics
+from rest_framework import viewsets
 from .models import Question
 from .serializers import QuestionSerializer
 User = get_user_model()
@@ -14,18 +15,13 @@ User = get_user_model()
 COMMON_WORDS = set(['to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'up', 'about', 'into', 'over', 'after', 'the', 'and', 'a', 'that', 'i', 'it', 'not', 'he', 'as', 'you', 'this', 'but', 'his', 'they', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their'])
 
 
-class QuestionListCreateView(generics.ListCreateAPIView):
+class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
 
     def perform_create(self, serializer):
         user = User.objects.get(pk=1)
         serializer.save(created_by=user)
-
-
-class QuestionRetrieveUpdateDestoryView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Question.objects.all()
-    serializer_class = QuestionSerializer
 
 
 class SearchView(ListView):

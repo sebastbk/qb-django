@@ -1,71 +1,78 @@
 from rest_framework import serializers
+from .validators.serializers import is_true
 from .models import Question, Answer, Tag
 
 
-class ManyToManyListField(serializers.ListField):
-    def __init__(self, *args, **kwargs):
-        self.field = kwargs.pop('field', None)
-        assert self.field is not None, (
-            "The field argument must be set to a field of the related model."
-        )
-        super().__init__(*args, **kwargs)
-
-    def to_representation(self, data):
-        data = data.values_list(self.field, flat=True)
-        return super().to_representation(data)
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ('id', 'name')
 
 
-class AnswerSerializer(serializers.ModelSerializer):
+class InlineAnswerSerializer(serializers.ModelSerializer):
+    delete = serializers.BooleanField(
+        write_only=True,
+        required=False,
+        validators=[is_true]
+    )
+
     class Meta:
         model = Answer
-        fields = ('id', 'text', 'alt1', 'alt2', 'type',)
+        fields = ('id', 'text', 'alt1', 'alt2', 'type', 'delete')
         read_only_fields = ('question',)
+        extra_kwargs = {
+            'id': {'read_only': False, 'required': False},
+        }
+
+    def validate(self, data):
+        """Check that an id field is included if the delete field is given."""
+        if 'delete' in data and 'id' not in data:
+            raise serializers.ValidationError(
+                "The id field must be provided with the delete field.")
+        return data
 
 
 class QuestionSerializer(serializers.ModelSerializer):
-    tags = ManyToManyListField(
-        field='name',
-        child=serializers.CharField(min_length=3, max_length=30)
+    tags = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='name'
     )
-    answers = AnswerSerializer(many=True)
+    answers = InlineAnswerSerializer(many=True)
 
     class Meta:
         model = Question
-        fields = ('id', 'created_by', 'created_on', 'text', 'difficulty', 'tags', 'answers')
+        fields = ('id', 'created_by', 'created_on', 'last_modified_on', 'text', 'difficulty', 'tags', 'answers')
+
+    def create_answers(self, instance, answers_data):
+        for answer_data in answers_data:
+            Answer.objects.create(question=instance, **answer_data)
 
     def create(self, validated_data):
-        tags_data = validated_data.pop('tags')
         answers_data = validated_data.pop('answers')
         question = Question.objects.create(**validated_data)
-        for tag_data in tags_data:
-            tag, created = Tag.objects.get_or_create(name=tag_data)
-            question.tags.add(tag)
-        for answer_data in answers_data:
-            Answer.objects.create(question=question, **answer_data)
+        self.create_answers(question, answers_data)
         return question
 
-    def update_tags(self, instance, tags_data):
-        instance_tags = instance.tags.all()
-        tags = [
-            Tag.objects.get_or_create(name=tag_data)[0]
-            for tag_data in tags_data
-        ]
-        # add new tags
-        for tag in tags:
-            if tag not in instance_tags:
-                instance.tags.add(tag)
-        # remove discarded tags
-        for instance_tag in instance_tags:
-            if instance_tag not in tags:
-                instance.tags.remove(instance_tag)
+    def update_answers(self, instance, answers_data):
+        instance_answers = instance.answers.all()
+        new_data = [a for a in answers_data if 'id' not in a]
+        updated_data = [a for a in answers_data if 'id' in a]
+        deleted_ids = [a['id'] for a in updated_data if a.get('delete', False)]
+        # remove deleted answers
+        instance_answers.filter(id__in=deleted_ids).delete()
+        # update existing answers
+        for answer_data in updated_data:
+            id = answer_data.pop('id')
+            if id not in deleted_ids:
+                instance_answers.filter(id=id).update(**answer_data)
+        # add new answers
+        self.create_answers(instance, new_data)
 
     def update(self, instance, validated_data):
-        tags_data = validated_data.pop('tags', None)
-        answers_data = validated_data.pop('answers', None)
-
-        for field, value in validated_data.items():
-            setattr(instance, field, value)
-
-        if tags_data is not None:
-            self.update_tags(instance, tags_data)
+        answers_data = validated_data.pop('answers')
+        self.update_answers(instance, answers_data)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
         return instance

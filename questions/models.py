@@ -26,6 +26,7 @@ class Question(models.Model):
         editable=False
     )
     created_on = models.DateTimeField(auto_now_add=True)
+    last_modified_on = models.DateTimeField(auto_now=True)
     text = models.TextField(max_length=255)
     difficulty = models.PositiveSmallIntegerField(
         default=1,

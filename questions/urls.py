@@ -1,9 +1,8 @@
-from django.conf.urls import url
+from rest_framework.routers import DefaultRouter
 
-from .views import QuestionListCreateView, QuestionRetrieveUpdateDestoryView
+from .views import QuestionViewSet
 
+router = DefaultRouter()
+router.register(r'questions', QuestionViewSet)
 
-urlpatterns = [
-    url(r'^$', QuestionListCreateView.as_view()),
-    url(r'^(?P<pk>\d+)$', QuestionRetrieveUpdateDestoryView.as_view()),
-]
+urlpatterns = router.urls
