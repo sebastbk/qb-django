@@ -1,8 +1,11 @@
 from datetime import datetime
+
 from django.db import models
 from django.core.validators import MinLengthValidator, MinValueValidator, MaxValueValidator
 from django.contrib.auth import get_user_model
+
 from utils.strings import fuzzy_match, strict_match
+
 User = get_user_model()
 
 
@@ -20,35 +23,16 @@ class Tag(models.Model):
         return self.name
 
 
-class Question(models.Model):
-    created_by = models.ForeignKey(
-        User,
-        editable=False
-    )
+class AuditMixin(models.Model):
+    created_by = models.ForeignKey(User, editable=False)
     created_on = models.DateTimeField(auto_now_add=True)
-    last_modified_on = models.DateTimeField(auto_now=True)
-    text = models.TextField(max_length=255)
-    difficulty = models.PositiveSmallIntegerField(
-        default=1,
-        validators=[
-            MinValueValidator(1),
-            MaxValueValidator(5),
-        ]
-    )
-    tags = models.ManyToManyField(
-        Tag, 
-        related_name='questions',
-        related_query_name="question",
-    )
+    modified_on = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_on']
-
-    def __str__(self):
-        return self.text
+        abstract = True
 
 
-class CharTypeMixin(object):
+class CharTypeMixin:
     """Helper class for storing several stringable datatypes into a charfield."""
     TEXT = 'str'
     NUMBER = 'int'
@@ -88,7 +72,7 @@ class CharTypeMixin(object):
         return cls.PACKING_FUNCTIONS[packing_type]
 
 
-class MatchingMixin(object):
+class MatchingMixin:
     FUZZY = 'FU'
     STRICT = 'ST'
     MATCHING_CHOICES = (
@@ -106,40 +90,43 @@ class MatchingMixin(object):
         return MATCHING_FUNCTIONS[matching_type]
 
 
-class Answer(models.Model):
-    question = models.ForeignKey(
-        Question, 
-        on_delete=models.CASCADE,
-        related_name='answers',
-        related_query_name='answer',
-    )
-    text = models.CharField(max_length=30)
-    alt1 = models.CharField(max_length=30, blank=True)
-    alt2 = models.CharField(max_length=30, blank=True)
-    type = models.CharField(
+class AnswerMixin(models.Model):
+    answer = models.CharField(max_length=30)
+    alternate_answer = models.CharField(max_length=30, blank=True)
+    answer_type = models.CharField(
         max_length=4,
         choices=CharTypeMixin.TYPE_CHOICES,
         default=CharTypeMixin.TEXT, 
-        help_text='The format of the answer.'
+        help_text='The format of the answer.',
     )
 
     class Meta:
-        order_with_respect_to = 'question'
-    
-    def __str__(self):
-        return ' or '.join(self.list())
-
-    def list(self):
-        return filter(None, [self.text, self.alt1, self.alt2])
+        abstract = True
 
 
-class Set(models.Model):
-    created_by = models.ForeignKey(
-        User,
-        editable=False
+class Question(AuditMixin, AnswerMixin):
+    text = models.TextField(max_length=255)
+    difficulty = models.PositiveSmallIntegerField(
+        default=1,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5),
+        ]
     )
-    created_on = models.DateTimeField(auto_now_add=True)
-    last_modified_on = models.DateTimeField(auto_now=True)
+    tags = models.ManyToManyField(
+        Tag, 
+        related_name='questions',
+        related_query_name='question',
+    )
+
+    class Meta:
+        ordering = ['-created_on']
+
+    def __str__(self):
+        return self.text
+
+
+class Set(AuditMixin):
     title = models.CharField(
         max_length=30, 
         validators=[MinLengthValidator(3)],
@@ -148,7 +135,12 @@ class Set(models.Model):
     questions = models.ManyToManyField(
         Question,
         related_name='sets',
-        related_query_name='set'
+        related_query_name='set',
+    )
+    tags = models.ManyToManyField(
+        Tag,
+        related_name='sets',
+        related_query_name='set',
     )
 
 
@@ -177,7 +169,7 @@ class QuestionRating(RatingBase):
         Question,
         on_delete=models.CASCADE,
         related_name='ratings',
-        related_query_name='rating'
+        related_query_name='rating',
     )
 
     class Meta:
@@ -189,7 +181,7 @@ class SetRating(RatingBase):
         Set,
         on_delete=models.CASCADE,
         related_name='ratings',
-        related_query_name='rating'
+        related_query_name='rating',
     )
 
     class Meta:
