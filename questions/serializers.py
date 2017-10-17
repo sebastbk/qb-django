@@ -1,6 +1,7 @@
 from rest_framework import serializers
+
 from .validators.serializers import is_true
-from .models import Question, Answer, Tag
+from .models import Tag, Question, Answer, Set
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -33,6 +34,10 @@ class InlineAnswerSerializer(serializers.ModelSerializer):
 
 
 class QuestionSerializer(serializers.ModelSerializer):
+    created_by = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
     tags = serializers.SlugRelatedField(
         many=True,
         read_only=True,
@@ -42,7 +47,16 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ('id', 'created_by', 'created_on', 'last_modified_on', 'text', 'difficulty', 'tags', 'answers')
+        fields = (
+            'id',
+            'created_by',
+            'created_on',
+            'last_modified_on',
+            'text',
+            'difficulty',
+            'tags',
+            'answers'
+        )
 
     def create_answers(self, instance, answers_data):
         for answer_data in answers_data:
@@ -76,3 +90,20 @@ class QuestionSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+
+
+class SetSerializer(serializers.ModelSerializer):
+    created_by = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+    
+    class Meta:
+        model = Set
+        fields = (
+            'id',
+            'created_by',
+            'created_on',
+            'last_modified_on',
+            'title',
+        )

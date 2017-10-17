@@ -1,18 +1,24 @@
 from functools import reduce
 from django.db.models import Q
-from django.shortcuts import reverse
+from django.shortcuts import reverse, get_object_or_404
 from django.views.generic.list import ListView
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.contrib.auth import get_user_model
-from rest_framework import generics
 from rest_framework import viewsets
-from .models import Question
-from .serializers import QuestionSerializer
+from rest_framework.decorators import detail_route
+from rest_framework.response import Response
+from .models import Tag, Question, Set
+from .serializers import TagSerializer, QuestionSerializer, SetSerializer
 User = get_user_model()
 
 
 COMMON_WORDS = set(['to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'up', 'about', 'into', 'over', 'after', 'the', 'and', 'a', 'that', 'i', 'it', 'not', 'he', 'as', 'you', 'this', 'but', 'his', 'they', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their'])
+
+
+class TagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
 
 
 class QuestionViewSet(viewsets.ModelViewSet):
@@ -22,6 +28,35 @@ class QuestionViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = User.objects.get(pk=1)
         serializer.save(created_by=user)
+
+
+class SetViewSet(viewsets.ModelViewSet):
+    queryset = Set.objects.all()
+    serializer_class = SetSerializer
+
+    def perform_create(self, serializer):
+        user = User.objects.get(pk=1)
+        serializer.save(created_by=user)
+
+    @detail_route(methods=['post'])
+    def add_questions(self, request, pk=None):
+        id_list = request.data.get('questions', [])
+        questions = Question.objects.filter(id__in=id_list)
+        self.get_object().questions.add(*questions)
+        content = {
+            'status': 'success'
+        }
+        return Responsecontent
+
+    @detail_route(methods=['delete'])
+    def remove_questions(self, request, pk=None):
+        id_list = request.data.get('questions', [])
+        questions = Question.objects.filter(id__in=id_list)
+        self.get_object().questions.remove(*questions)
+        content = {
+            'status': 'success'
+        }
+        return Response(content)
 
 
 class SearchView(ListView):

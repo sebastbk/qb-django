@@ -106,7 +106,6 @@ class MatchingMixin(object):
         return MATCHING_FUNCTIONS[matching_type]
 
 
-
 class Answer(models.Model):
     question = models.ForeignKey(
         Question, 
@@ -140,6 +139,7 @@ class Set(models.Model):
         editable=False
     )
     created_on = models.DateTimeField(auto_now_add=True)
+    last_modified_on = models.DateTimeField(auto_now=True)
     title = models.CharField(
         max_length=30, 
         validators=[MinLengthValidator(3)],
