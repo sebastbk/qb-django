@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from .models import Tag, Question, Set
+from common.models import Tag
+from .models import Question, Set
 
 
 class TagMixin(serializers.ModelSerializer):

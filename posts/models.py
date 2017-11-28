@@ -1,15 +1,10 @@
 from django.db import models
-from django.contrib.auth import get_user_model
 
-User = get_user_model()
+from common.models import AuditMixin
 
 
-class Post(models.Model):
-    created_by = models.ForeignKey(
-        User,
-        editable=False
-    )
-    created_on = models.DateTimeField(auto_now_add=True)
-    modified_on = models.DateTimeField(auto_now=True)
+class Post(AuditMixin):
     title = models.CharField(max_length=30)
-    text = models.TextField(max_length=255)
+    lead = models.TextField(max_length=255)
+    body = models.TextField(max_length=1023)
+    image = models.ImageField()

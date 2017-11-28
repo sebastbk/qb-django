@@ -8,7 +8,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route
 from rest_framework.response import Response
-from .models import Tag, Question, Set
+from common.models import Tag
+from .models import Question, Set
 from .serializers import TagSerializer, QuestionSerializer, SetSerializer
 User = get_user_model()
 
