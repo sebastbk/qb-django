@@ -19,7 +19,7 @@ class AnswerMixin(models.Model):
         (TIME, 'Time'),
     )
     answer = models.CharField(max_length=30)
-    alternate_answer = models.CharField(max_length=30, blank=True)
+    alt_answer = models.CharField(max_length=30, blank=True)
     answer_widget = models.CharField(
         max_length=6,
         choices=ANSWER_WIDGET_CHOICES,
