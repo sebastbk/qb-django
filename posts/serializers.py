@@ -1,14 +1,19 @@
 from rest_framework import serializers
 
+from common.serializers import AuditMixin
 from .models import Post
 
 
-class PostSerializer(serializers.ModelSerializer):
-    created_by = serializers.SlugRelatedField(
-        slug_field='username',
-        read_only=True
-    )
-    
+class PostSerializer(AuditMixin, serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ('id', 'created_by', 'created_on', 'last_modified_on', 'title', 'text')
+        fields = (
+            'id',
+            'created_by',
+            'created_on',
+            'last_modified_on',
+            'title',
+            'lead',
+            'body',
+            'image',
+        )

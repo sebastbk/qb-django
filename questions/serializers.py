@@ -1,31 +1,10 @@
 from rest_framework import serializers
 
-from common.models import Tag
+from common.serializers import AuditMixin, LikesMixin, TagMixin
 from .models import Question, Set
 
 
-class TagMixin(serializers.ModelSerializer):
-    tags = serializers.SlugRelatedField(
-        many=True,
-        read_only=True,
-        slug_field='name',
-    )
-
-
-class AuditMixin(serializers.ModelSerializer):
-    created_by = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='username',
-    )
-
-
-class TagSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tag
-        fields = ('id', 'name',)
-
-
-class QuestionSerializer(AuditMixin, TagMixin, serializers.ModelSerializer):
+class QuestionSerializer(AuditMixin, LikesMixin, TagMixin, serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = (
@@ -33,16 +12,18 @@ class QuestionSerializer(AuditMixin, TagMixin, serializers.ModelSerializer):
             'created_by',
             'created_on',
             'modified_on',
+            'likes',
+            'like',
+            'tags',
             'difficulty',
             'text',
             'answer',
             'alternate_answer',
-            'answer_type',
-            'tags',
+            'answer_widget',
         )
 
 
-class SetSerializer(AuditMixin, TagMixin, serializers.ModelSerializer):
+class SetSerializer(AuditMixin, LikesMixin, TagMixin, serializers.ModelSerializer):
     class Meta:
         model = Set
         fields = (
@@ -50,6 +31,9 @@ class SetSerializer(AuditMixin, TagMixin, serializers.ModelSerializer):
             'created_by',
             'created_on',
             'modified_on',
-            'title',
+            'likes',
+            'like',
             'tags',
+            'title',
+            'description',
         )

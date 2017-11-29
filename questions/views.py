@@ -10,7 +10,8 @@ from rest_framework.decorators import detail_route
 from rest_framework.response import Response
 from common.models import Tag
 from .models import Question, Set
-from .serializers import TagSerializer, QuestionSerializer, SetSerializer
+from common.serializers import TagSerializer
+from .serializers import QuestionSerializer, SetSerializer
 User = get_user_model()
 
 
