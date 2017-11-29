@@ -11,7 +11,7 @@ class PostSerializer(AuditMixin, serializers.ModelSerializer):
             'id',
             'created_by',
             'created_on',
-            'last_modified_on',
+            'modified_on',
             'title',
             'lead',
             'body',
