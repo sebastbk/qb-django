@@ -101,7 +101,7 @@ class QuestionManager(ModelManager, TagsMixin, LikesMixin):
     def alternate_answer(self):
         return self.fake.word() if random.random() > 0.8 else ''
 
-    @classmethod
+    @staticmethod
     def answer_widget():
         return Question.TEXT
 

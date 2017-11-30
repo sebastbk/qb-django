@@ -1,21 +1,23 @@
 from functools import reduce
+
 from django.db.models import Q
 from django.shortcuts import reverse, get_object_or_404
 from django.views.generic.list import ListView
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.contrib.auth import get_user_model
-from rest_framework import viewsets
-from rest_framework.decorators import detail_route
-from rest_framework.response import Response
-from common.models import Tag
-from .models import Question, Set
-from common.serializers import TagSerializer
-from .serializers import QuestionSerializer, SetSerializer
 User = get_user_model()
 
+from rest_framework import viewsets, filters
+from rest_framework.decorators import detail_route
+from rest_framework.response import Response
 
-COMMON_WORDS = set(['to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'up', 'about', 'into', 'over', 'after', 'the', 'and', 'a', 'that', 'i', 'it', 'not', 'he', 'as', 'you', 'this', 'but', 'his', 'they', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their'])
+from django_filters.rest_framework import DjangoFilterBackend
+
+from common.models import Tag
+from common.serializers import TagSerializer
+from .models import Question, Set
+from .serializers import QuestionSerializer, SetSerializer
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -26,32 +28,41 @@ class TagViewSet(viewsets.ModelViewSet):
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+    )
+    filter_fields = (
+        'created_by__username',
+        'difficulty',
+    )
+    search_fields = ('=tags__name',)
 
     def perform_create(self, serializer):
         user = User.objects.get(pk=1)
         serializer.save(created_by=user)
 
 
-class SetViewSet(viewsets.ModelViewSet):
-    queryset = Set.objects.all()
-    serializer_class = SetSerializer
+class SetQuestions:
+    @detail_route(url_path='questions')
+    def questions(self, request, pk=None):
+        questions = self.get_object().questions.all()
+        serializer = QuestionSerializer(questions, many=True)
+        return Response(serializer.data)
+        
 
-    def perform_create(self, serializer):
-        user = User.objects.get(pk=1)
-        serializer.save(created_by=user)
-
-    @detail_route(methods=['post'])
-    def add_questions(self, request, pk=None):
+    @detail_route(methods=['post'], url_path='questions/add', url_name='questions-add')
+    def questions_add(self, request, pk=None):
         id_list = request.data.get('questions', [])
         questions = Question.objects.filter(id__in=id_list)
         self.get_object().questions.add(*questions)
         content = {
             'status': 'success'
         }
-        return Responsecontent
+        return Response(content)
 
-    @detail_route(methods=['delete'])
-    def remove_questions(self, request, pk=None):
+    @detail_route(methods=['post', 'delete'], url_path='questions/remove', url_name='questions-remove')
+    def questions_remove(self, request, pk=None):
         id_list = request.data.get('questions', [])
         questions = Question.objects.filter(id__in=id_list)
         self.get_object().questions.remove(*questions)
@@ -59,6 +70,15 @@ class SetViewSet(viewsets.ModelViewSet):
             'status': 'success'
         }
         return Response(content)
+
+
+class SetViewSet(viewsets.ModelViewSet, SetQuestions):
+    queryset = Set.objects.all()
+    serializer_class = SetSerializer
+
+    def perform_create(self, serializer):
+        user = User.objects.get(pk=1)
+        serializer.save(created_by=user)
 
 
 class SearchView(ListView):
