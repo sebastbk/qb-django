@@ -7,13 +7,12 @@ import django
 django.setup()
 from django.contrib.auth import get_user_model
 User = get_user_model()
-
+from rest_framework.authtoken.models import Token
 from faker import Faker
 
 from common.models import Tag
 from posts.models import Post
 from questions.models import Question, Set
-from tokens.models import Token
 
 
 def cap_range(n, m, k):
@@ -78,13 +77,8 @@ class UserManager(ModelManager):
 
 class TokenManager(ModelManager):
     def create_bulk(self, users):
-        Token.objects.bulk_create([
-            Token(
-                user=user,
-                is_active=True,
-            )
-            for user in users
-        ])
+        for user in users:
+            Token.objects.create(user=user)
 
 
 class TagManager(ModelManager):

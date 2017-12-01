@@ -40,7 +40,7 @@ class Question(AuditMixin, TagsMixin, LikesMixin, AnswerMixin):
     )
 
     class Meta:
-        ordering = ['-created_on']
+        ordering = ['-created_on', '-pk']
 
     def __str__(self):
         return str(self.id)
@@ -61,6 +61,9 @@ class Set(AuditMixin, TagsMixin, LikesMixin):
         related_name='sets',
         related_query_name='set',
     )
+
+    class Meta:
+        ordering = ['-created_on', '-pk']
 
     def __str__(self):
         return self.title
