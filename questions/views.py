@@ -51,7 +51,11 @@ class SetQuestions:
         return Response(serializer.data)
         
 
-    @detail_route(methods=['post'], url_path='questions/add', url_name='questions-add')
+    @detail_route(
+        methods=['post'],
+        url_path='questions/add',
+        url_name='questions-add',
+    )
     def questions_add(self, request, pk=None):
         id_list = request.data.get('questions', [])
         questions = Question.objects.filter(id__in=id_list)
@@ -61,7 +65,11 @@ class SetQuestions:
         }
         return Response(content)
 
-    @detail_route(methods=['post', 'delete'], url_path='questions/remove', url_name='questions-remove')
+    @detail_route(
+        methods=['post', 'delete'],
+        url_path='questions/remove',
+        url_name='questions-remove',
+    )
     def questions_remove(self, request, pk=None):
         id_list = request.data.get('questions', [])
         questions = Question.objects.filter(id__in=id_list)

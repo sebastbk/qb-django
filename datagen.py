@@ -13,7 +13,7 @@ from faker import Faker
 from common.models import Tag
 from posts.models import Post
 from questions.models import Question, Set
-
+from tokens.models import Token
 
 
 def cap_range(n, m, k):
@@ -76,6 +76,17 @@ class UserManager(ModelManager):
         User.objects.bulk_create(iter(self.user_iter(self.usernames())))
 
 
+class TokenManager(ModelManager):
+    def create_bulk(self, users):
+        Token.objects.bulk_create([
+            Token(
+                user=user,
+                is_active=True,
+            )
+            for user in users
+        ])
+
+
 class TagManager(ModelManager):
     def names(self, k):
         return set(filter(lambda x: len(x) > 2, self.fake.words(k)))
@@ -101,10 +112,6 @@ class QuestionManager(ModelManager, TagsMixin, LikesMixin):
     def alternate_answer(self):
         return self.fake.word() if random.random() > 0.8 else ''
 
-    @staticmethod
-    def answer_widget():
-        return Question.TEXT
-
     def create_bulk(self, users, k):
         Question.objects.bulk_create([
             Question(
@@ -113,7 +120,7 @@ class QuestionManager(ModelManager, TagsMixin, LikesMixin):
                 text=self.text(),
                 answer=self.answer(),
                 alternate_answer=self.alternate_answer(),
-                answer_widget=self.answer_widget(),
+                answer_widget=Question.TEXT,
             )
             for _ in range(k)
         ])
@@ -169,6 +176,8 @@ class PostManager(ModelManager, TextMixin):
 if __name__ == '__main__':
     UserManager().create_bulk()
     users = User.objects.only('pk', 'is_staff')
+
+    TokenManager().create_bulk(users)
 
     TagManager().create_bulk(1000)
     tags = Tag.objects.only('pk')
