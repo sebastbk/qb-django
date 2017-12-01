@@ -1,4 +1,5 @@
 from django.test import TestCase
+
 from .strings import fuzzy_match, strict_match
 
 class FuzzyMatchTestCase(TestCase):

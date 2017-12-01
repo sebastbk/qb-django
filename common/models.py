@@ -1,13 +1,11 @@
 from django.db import models
+from django.conf import settings
 from django.core.validators import MinLengthValidator
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
 
 
 class AuditMixin(models.Model):
     created_by = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         related_name='%(app_label)s_%(class)ss',
         related_query_name='%(app_label)s_%(class)s',
         editable=False,
@@ -21,7 +19,7 @@ class AuditMixin(models.Model):
 
 class LikesMixin(models.Model):
     likes = models.ManyToManyField(
-        User,
+        settings.AUTH_USER_MODEL,
         related_name='likes_%(app_label)s_%(class)ss',
         related_query_name='likes_%(app_label)s_%(class)s',
     )
