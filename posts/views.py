@@ -3,6 +3,8 @@ User = get_user_model()
 
 from rest_framework import viewsets
 
+from common.permissions import IsStaffOrReadOnly
+
 from .serializers import PostSerializer
 from .models import Post
 
@@ -10,7 +12,9 @@ from .models import Post
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    permission_classes = (
+        IsStaffOrReadOnly,
+    )
 
     def perform_create(self, serializer):
-        user = User.objects.get(pk=1)
-        serializer.save(created_by=user)
+        serializer.save(created_by=self.request.user)

@@ -10,7 +10,7 @@ User = get_user_model()
 
 from rest_framework import viewsets, filters
 from rest_framework.decorators import detail_route
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -27,8 +27,12 @@ class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (
-        IsAuthenticated,
+        IsAuthenticatedOrReadOnly,
     )
+    filter_backends = (
+        filters.SearchFilter,
+    )
+    search_fields = ('name',)
 
 
 class QuestionViewSet(viewsets.ModelViewSet):

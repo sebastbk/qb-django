@@ -1,8 +1,11 @@
-# quiz-bowl
-A web app for playing quiz bowls.
+# qb-django
 
-See design.md for more details.
+Back end for the quiz-bowl app.
 
 ## Requirements
 
-Tested with Python 3.6 and Django 1.11.5.
+Django==1.11.7
+django-cors-headers==2.1.0
+django-filter==1.1.0
+djangorestframework==3.7.3
+Faker==0.8.6
