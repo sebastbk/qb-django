@@ -46,7 +46,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,
     )
     filter_fields = (
-        'created_by__username',
+        'created_by',
         'difficulty',
     )
     search_fields = ('=tags__name',)
