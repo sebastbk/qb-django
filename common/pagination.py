@@ -6,5 +6,7 @@ class PageNumberPaginationWithPage(PageNumberPagination):
         return Response({
             'count': self.page.paginator.count,
             'page': self.page.number,
+            'has_next': self.page.has_next(),
+            'has_previous': self.page.has_previous(),
             'results': data
         })
